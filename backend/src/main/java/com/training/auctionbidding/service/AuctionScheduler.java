@@ -1,9 +1,11 @@
+
 package com.training.auctionbidding.service;
 
 import com.training.auctionbidding.entity.Auction;
 import com.training.auctionbidding.entity.AuctionStatus;
 import com.training.auctionbidding.repository.AuctionRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -13,6 +15,7 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class AuctionScheduler {
 
     private final ApplicationEventPublisher eventPublisher;
@@ -21,80 +24,49 @@ public class AuctionScheduler {
 
     @Scheduled(fixedDelay = 5000)
     public void processAuctions() {
-
         LocalDateTime now = LocalDateTime.now();
 
-        // Start UPCOMING auctions whose start time has arrived
+        // Start only auctions that are within their scheduled window.
         List<Auction> upcomingAuctions =
-                auctionRepository
-                        .findByStatusAndStartTimeLessThanEqual(
-                                AuctionStatus.UPCOMING,
-                                now
-                        );
+                auctionRepository.findByStatusAndStartTimeLessThanEqual(
+                        AuctionStatus.UPCOMING, now);
 
         for (Auction auction : upcomingAuctions) {
+            if (!now.isBefore(auction.getEndTime())) {
+                // Already expired: do not start it.
+                // Handle separately after adding overdue settlement support.
+                continue;
+            }
 
             try {
-
                 auctionService.startAuction(auction.getId());
 
                 eventPublisher.publishEvent(
                         new AuctionStatusEvent(
-                                auction.getId(),
-                                AuctionStatus.LIVE
-                        )
-                );
+                                auction.getId(), AuctionStatus.LIVE));
 
-                System.out.println(
-                        "Automatically started auction: "
-                                + auction.getId()
-                );
-
+                log.info("Started auction {}", auction.getId());
             } catch (Exception e) {
-
-                System.err.println(
-                        "Failed to start auction "
-                                + auction.getId()
-                                + ": "
-                                + e.getMessage()
-                );
+                log.error("Failed to start auction {}", auction.getId(), e);
             }
         }
 
-        // End LIVE auctions whose end time has passed
+        // End LIVE auctions whose end time has arrived.
         List<Auction> expiredAuctions =
-                auctionRepository
-                        .findByStatusAndEndTimeLessThanEqual(
-                                AuctionStatus.LIVE,
-                                now
-                        );
+                auctionRepository.findByStatusAndEndTimeLessThanEqual(
+                        AuctionStatus.LIVE, now);
 
         for (Auction auction : expiredAuctions) {
-
             try {
-
                 auctionService.endAuction(auction.getId());
 
                 eventPublisher.publishEvent(
                         new AuctionStatusEvent(
-                                auction.getId(),
-                                AuctionStatus.ENDED
-                        )
-                );
+                                auction.getId(), AuctionStatus.ENDED));
 
-                System.out.println(
-                        "Automatically ended auction: "
-                                + auction.getId()
-                );
-
+                log.info("Ended auction {}", auction.getId());
             } catch (Exception e) {
-
-                System.err.println(
-                        "Failed to end auction "
-                                + auction.getId()
-                                + ": "
-                                + e.getMessage()
-                );
+                log.error("Failed to end auction {}", auction.getId(), e);
             }
         }
     }
