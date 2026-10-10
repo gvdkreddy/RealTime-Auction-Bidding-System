@@ -34,6 +34,32 @@ export default function AuctionDetails() {
   const [success, setSuccess] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  // Refresh the clock every second.
+  const [clockNow, setClockNow] = useState(Date.now());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setClockNow(Date.now());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  // Refresh authoritative auction data periodically.
+  useEffect(() => {
+    const timer = setInterval(() => {
+      reload();
+    }, 5000);
+
+    return () => clearInterval(timer);
+  }, [reload]);
+
+  useEffect(() => {
+    setLiveBids([]);
+    setBidError("");
+    setSuccess("");
+  }, [id]);
+
   const onBid = useCallback((bid) => {
     setBids((current) => [
       bid,
@@ -70,12 +96,6 @@ export default function AuctionDetails() {
     auction?.id,
     { onBid, onStatus }
   );
-
-  useEffect(() => {
-    setLiveBids([]);
-    setBidError("");
-    setSuccess("");
-  }, [id]);
 
   if (loading) {
     return <LoadingSpinner text="Loading auction..." />;
@@ -126,6 +146,9 @@ export default function AuctionDetails() {
       setSubmitting(false);
     }
   };
+
+  // Avoid an unused-variable warning while keeping the local clock available.
+  void clockNow;
 
   const visibleBids = liveBids.length ? liveBids : bids;
 
