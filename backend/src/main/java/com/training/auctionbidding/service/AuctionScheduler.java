@@ -24,7 +24,7 @@ public class AuctionScheduler {
 
     @Scheduled(fixedDelay = 5000)
     public void processAuctions() {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(java.time.ZoneId.of("Asia/Kolkata"));
 
         log.info("Auction scheduler running. Server time: {}", now);
 
