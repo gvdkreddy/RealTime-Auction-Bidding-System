@@ -44,7 +44,7 @@ public class AuctionService {
 
         User seller = userService.getByEmail(sellerEmail);
 
-        LocalDateTime.now(java.time.ZoneId.of("Asia/Kolkata"))
+        LocalDateTime.now(java.time.ZoneId.of("Asia/Kolkata"));
 
         AuctionStatus status;
 
@@ -96,7 +96,7 @@ public class AuctionService {
                     "Cancelled auction cannot be started");
         }
     
-        LocalDateTime.now(java.time.ZoneId.of("Asia/Kolkata"))
+        LocalDateTime.now(java.time.ZoneId.of("Asia/Kolkata"));
     
         if (now.isBefore(auction.getStartTime())) {
             throw new IllegalStateException(
@@ -200,7 +200,7 @@ public class AuctionService {
     @Scheduled(fixedRate = 10000)
 @Transactional
 public void updateAuctionStatuses() {
-    LocalDateTime.now(java.time.ZoneId.of("Asia/Kolkata"))
+    LocalDateTime.now(java.time.ZoneId.of("Asia/Kolkata"));
 
     List<Auction> auctions = auctionRepository.findAll();
 
