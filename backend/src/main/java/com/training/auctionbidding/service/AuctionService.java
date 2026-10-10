@@ -88,17 +88,27 @@ public class AuctionService {
     // Start auction
     @Transactional
     public Auction startAuction(Long id) {
-
-        Auction auction = getById(id);
-
+        Auction auction = auctionRepository.findByIdForUpdate(id)
+                .orElseThrow(() -> new AuctionNotFoundException(id));
+    
         if (auction.getStatus() == AuctionStatus.CANCELLED) {
             throw new IllegalStateException(
-                    "Cancelled auction cannot be started"
-            );
+                    "Cancelled auction cannot be started");
         }
-
+    
+        LocalDateTime now = LocalDateTime.now();
+    
+        if (now.isBefore(auction.getStartTime())) {
+            throw new IllegalStateException(
+                    "Auction cannot start before its scheduled start time");
+        }
+    
+        if (!now.isBefore(auction.getEndTime())) {
+            throw new IllegalStateException(
+                    "Auction has already reached its end time");
+        }
+    
         auction.setStatus(AuctionStatus.LIVE);
-
         return auctionRepository.save(auction);
     }
 
