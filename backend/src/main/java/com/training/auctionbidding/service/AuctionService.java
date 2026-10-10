@@ -44,7 +44,7 @@ public class AuctionService {
 
         User seller = userService.getByEmail(sellerEmail);
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime.now(java.time.ZoneId.of("Asia/Kolkata"))
 
         AuctionStatus status;
 
