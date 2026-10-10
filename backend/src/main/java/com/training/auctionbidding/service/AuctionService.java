@@ -1,7 +1,6 @@
 package com.training.auctionbidding.service;
 
 import org.springframework.scheduling.annotation.Scheduled;
-import java.util.ArrayList;
 import com.training.auctionbidding.dto.AuctionRequest;
 import com.training.auctionbidding.dto.AuctionResponse;
 import com.training.auctionbidding.dto.UserResponse;
@@ -19,11 +18,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class AuctionService {
+
+    private static final ZoneId AUCTION_ZONE =
+            ZoneId.of("Asia/Kolkata");
 
     private final AuctionRepository auctionRepository;
     private final UserService userService;
@@ -35,7 +38,6 @@ public class AuctionService {
             AuctionRequest request,
             String sellerEmail
     ) {
-
         if (!request.getEndTime().isAfter(request.getStartTime())) {
             throw new IllegalArgumentException(
                     "End time must be after start time"
@@ -43,8 +45,7 @@ public class AuctionService {
         }
 
         User seller = userService.getByEmail(sellerEmail);
-
-        LocalDateTime.now(java.time.ZoneId.of("Asia/Kolkata"));
+        LocalDateTime now = LocalDateTime.now(AUCTION_ZONE);
 
         AuctionStatus status;
 
@@ -80,9 +81,7 @@ public class AuctionService {
     // Get auction by ID
     public Auction getById(Long id) {
         return auctionRepository.findByIdWithUsers(id)
-                .orElseThrow(() ->
-                        new AuctionNotFoundException(id)
-                );
+                .orElseThrow(() -> new AuctionNotFoundException(id));
     }
 
     // Start auction
@@ -90,24 +89,27 @@ public class AuctionService {
     public Auction startAuction(Long id) {
         Auction auction = auctionRepository.findByIdForUpdate(id)
                 .orElseThrow(() -> new AuctionNotFoundException(id));
-    
+
         if (auction.getStatus() == AuctionStatus.CANCELLED) {
             throw new IllegalStateException(
-                    "Cancelled auction cannot be started");
+                    "Cancelled auction cannot be started"
+            );
         }
-    
-        LocalDateTime.now(java.time.ZoneId.of("Asia/Kolkata"));
-    
+
+        LocalDateTime now = LocalDateTime.now(AUCTION_ZONE);
+
         if (now.isBefore(auction.getStartTime())) {
             throw new IllegalStateException(
-                    "Auction cannot start before its scheduled start time");
+                    "Auction cannot start before its scheduled start time"
+            );
         }
-    
+
         if (!now.isBefore(auction.getEndTime())) {
             throw new IllegalStateException(
-                    "Auction has already reached its end time");
+                    "Auction has already reached its end time"
+            );
         }
-    
+
         auction.setStatus(AuctionStatus.LIVE);
         return auctionRepository.save(auction);
     }
@@ -115,11 +117,8 @@ public class AuctionService {
     // End auction and settle payment
     @Transactional
     public Auction endAuction(Long id) {
-
         Auction auction = auctionRepository.findByIdForUpdate(id)
-                .orElseThrow(() ->
-                        new AuctionNotFoundException(id)
-                );
+                .orElseThrow(() -> new AuctionNotFoundException(id));
 
         if (auction.getStatus() == AuctionStatus.CANCELLED) {
             throw new IllegalStateException(
@@ -132,108 +131,85 @@ public class AuctionService {
             return auction;
         }
 
-        // Find the highest bid
         Bid highestBid = bidRepository
                 .findTopByAuctionIdOrderByAmountDesc(id)
                 .orElse(null);
 
         if (highestBid != null) {
-
-            // Lock the winner's wallet
             User winner = userRepository.findByIdForUpdate(
                     highestBid.getBidder().getId()
             ).orElseThrow(() ->
-                    new IllegalStateException(
-                            "Winner not found"
-                    )
+                    new IllegalStateException("Winner not found")
             );
 
-            // Lock the seller's wallet
             User seller = userRepository.findByIdForUpdate(
                     auction.getSeller().getId()
             ).orElseThrow(() ->
-                    new IllegalStateException(
-                            "Seller not found"
-                    )
+                    new IllegalStateException("Seller not found")
             );
 
             BigDecimal winningAmount = highestBid.getAmount();
 
-            // Safety check:
-            // winner must have enough money reserved
-            if (winner.getReservedBalance()
-                    .compareTo(winningAmount) < 0) {
-
+            if (winner.getReservedBalance().compareTo(winningAmount) < 0) {
                 throw new IllegalStateException(
                         "Winner does not have enough reserved balance"
                 );
             }
 
-            // Remove winning amount from winner's total balance
             winner.setBalance(
-                    winner.getBalance()
-                            .subtract(winningAmount)
+                    winner.getBalance().subtract(winningAmount)
             );
 
-            // Release the reservation because
-            // the reserved money is now being paid
             winner.setReservedBalance(
-                    winner.getReservedBalance()
-                            .subtract(winningAmount)
+                    winner.getReservedBalance().subtract(winningAmount)
             );
 
-            // Transfer winning amount to seller
             seller.setBalance(
-                    seller.getBalance()
-                            .add(winningAmount)
+                    seller.getBalance().add(winningAmount)
             );
 
-            // Set auction winner
             auction.setWinner(winner);
         }
 
-        // Mark auction as ended
         auction.setStatus(AuctionStatus.ENDED);
-
         return auctionRepository.save(auction);
     }
+
+    // Automatically update auction statuses every 10 seconds
     @Scheduled(fixedRate = 10000)
-@Transactional
-public void updateAuctionStatuses() {
-    LocalDateTime.now(java.time.ZoneId.of("Asia/Kolkata"));
+    @Transactional
+    public void updateAuctionStatuses() {
+        LocalDateTime now = LocalDateTime.now(AUCTION_ZONE);
 
-    List<Auction> auctions = auctionRepository.findAll();
+        List<Auction> auctions = auctionRepository.findAll();
 
-    for (Auction auction : auctions) {
-        if (auction.getStatus() == AuctionStatus.CANCELLED
-                || auction.getStatus() == AuctionStatus.ENDED) {
-            continue;
-        }
+        for (Auction auction : auctions) {
+            if (auction.getStatus() == AuctionStatus.CANCELLED
+                    || auction.getStatus() == AuctionStatus.ENDED) {
+                continue;
+            }
 
-        if (!now.isBefore(auction.getEndTime())) {
-            endAuction(auction.getId());
-        } else if (!now.isBefore(auction.getStartTime())) {
-            auction.setStatus(AuctionStatus.LIVE);
-        } else {
-            auction.setStatus(AuctionStatus.UPCOMING);
+            if (!now.isBefore(auction.getEndTime())) {
+                endAuction(auction.getId());
+            } else if (!now.isBefore(auction.getStartTime())) {
+                auction.setStatus(AuctionStatus.LIVE);
+                auctionRepository.save(auction);
+            } else {
+                auction.setStatus(AuctionStatus.UPCOMING);
+                auctionRepository.save(auction);
+            }
         }
     }
-}
 
     // Convert Auction entity to AuctionResponse DTO
     public AuctionResponse toResponse(Auction auction) {
-
         UserResponse seller = auction.getSeller() == null
                 ? null
-                : userService.toResponse(
-                auction.getSeller()
-        );
+                : userService.toResponse(auction.getSeller());
 
         UserResponse winner = auction.getWinner() == null
                 ? null
-                : userService.toResponse(
-                auction.getWinner()
-        );
+                : userService.toResponse(auction.getWinner());
 
         return AuctionResponse.builder()
                 .id(auction.getId())
@@ -241,9 +217,7 @@ public void updateAuctionStatuses() {
                 .description(auction.getDescription())
                 .startingPrice(auction.getStartingPrice())
                 .currentPrice(auction.getCurrentPrice())
-                .minimumBidIncrement(
-                        auction.getMinimumBidIncrement()
-                )
+                .minimumBidIncrement(auction.getMinimumBidIncrement())
                 .startTime(auction.getStartTime())
                 .endTime(auction.getEndTime())
                 .status(auction.getStatus())
