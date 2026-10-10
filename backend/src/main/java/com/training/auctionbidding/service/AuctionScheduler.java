@@ -1,3 +1,4 @@
+
 package com.training.auctionbidding.service;
 
 import com.training.auctionbidding.entity.Auction;
@@ -25,58 +26,66 @@ public class AuctionScheduler {
     public void processAuctions() {
         LocalDateTime now = LocalDateTime.now();
 
-        // Process LIVE auctions that have expired.
-        List<Auction> expiredLive =
-                auctionRepository.findByStatusAndEndTimeLessThanEqual(
-                        AuctionStatus.LIVE, now);
+        log.info("Auction scheduler running. Server time: {}", now);
 
-        for (Auction auction : expiredLive) {
-            endAuctionSafely(auction.getId());
-        }
-
-        // Process UPCOMING auctions whose start time has arrived.
-        List<Auction> due =
+        List<Auction> upcoming =
                 auctionRepository.findByStatusAndStartTimeLessThanEqual(
                         AuctionStatus.UPCOMING, now);
 
-        for (Auction auction : due) {
-            if (!now.isBefore(auction.getEndTime())) {
-                // The auction window has completely elapsed.
-                // Do not activate it or accept bids.
-                // Settlement support for this legacy state is needed
-                // before automatically ending it safely.
-                log.warn(
-                        "Auction {} is UPCOMING but its end time passed; "
-                                + "skipping activation",
-                        auction.getId());
-                continue;
-            }
+        log.info("Due upcoming auctions found: {}", upcoming.size());
 
+        for (Auction auction : upcoming) {
             try {
-                auctionService.startAuction(auction.getId());
+                // Don't start auctions whose end time has already passed.
+                if (!now.isBefore(auction.getEndTime())) {
+                    log.warn(
+                            "Auction {} is already past end time; skipping activation",
+                            auction.getId());
+                    continue;
+                }
+
+                log.info("Attempting to start auction {}", auction.getId());
+
+                Auction started =
+                        auctionService.startAuction(auction.getId());
+
+                log.info(
+                        "Auction {} start result: {}",
+                        started.getId(), started.getStatus());
 
                 eventPublisher.publishEvent(
                         new AuctionStatusEvent(
-                                auction.getId(), AuctionStatus.LIVE));
-
-                log.info("Started auction {}", auction.getId());
+                                started.getId(), started.getStatus()));
             } catch (Exception e) {
-                log.error("Failed to start auction {}", auction.getId(), e);
+                log.error(
+                        "Failed to start auction {}",
+                        auction.getId(), e);
             }
         }
-    }
 
-    private void endAuctionSafely(Long auctionId) {
-        try {
-            auctionService.endAuction(auctionId);
+        List<Auction> expired =
+                auctionRepository.findByStatusAndEndTimeLessThanEqual(
+                        AuctionStatus.LIVE, now);
 
-            eventPublisher.publishEvent(
-                    new AuctionStatusEvent(
-                            auctionId, AuctionStatus.ENDED));
+        for (Auction auction : expired) {
+            try {
+                log.info("Attempting to end auction {}", auction.getId());
 
-            log.info("Ended auction {}", auctionId);
-        } catch (Exception e) {
-            log.error("Failed to end auction {}", auctionId, e);
+                Auction ended =
+                        auctionService.endAuction(auction.getId());
+
+                eventPublisher.publishEvent(
+                        new AuctionStatusEvent(
+                                ended.getId(), ended.getStatus()));
+
+                log.info(
+                        "Auction {} end result: {}",
+                        ended.getId(), ended.getStatus());
+            } catch (Exception e) {
+                log.error(
+                        "Failed to end auction {}",
+                        auction.getId(), e);
+            }
         }
     }
 }
