@@ -418,3 +418,379 @@ td { font-size: 14px; }
     width: 100%;
   }
 }
+
+
+/* ===== Responsive AuctionHub refinements ===== */
+
+.mobile-menu-toggle {
+  display: none;
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  color: var(--text);
+  background: var(--surface);
+  font-size: 21px;
+  line-height: 1;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+img,
+video,
+canvas,
+svg {
+  max-width: 100%;
+}
+
+button,
+.btn,
+input,
+select,
+textarea {
+  min-height: 42px;
+}
+
+input,
+select,
+textarea {
+  min-width: 0;
+}
+
+.page-section,
+.section {
+  min-width: 0;
+}
+
+.detail-grid > *,
+.hero > *,
+.form-grid > *,
+.stats-grid > * {
+  min-width: 0;
+}
+
+/* Tablets and smaller screens */
+@media (max-width: 900px) {
+  .nav-inner {
+    position: relative;
+    height: auto;
+    min-height: 66px;
+    padding: 12px 18px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .brand {
+    margin-right: auto;
+    font-size: 22px;
+  }
+
+  .mobile-menu-toggle {
+    display: inline-flex;
+  }
+
+  .nav-links {
+    display: none;
+    order: 3;
+    flex: 0 0 100%;
+    width: 100%;
+    padding: 8px 0 4px;
+    gap: 4px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .nav-links.nav-links-open {
+    display: flex;
+  }
+
+  .nav-links a {
+    display: block;
+    padding: 12px 13px;
+    border-radius: 9px;
+    font-size: 15px;
+  }
+
+  .nav-links a.active,
+  .nav-links a:hover {
+    background: var(--surface-2);
+  }
+
+  .nav-user {
+    margin-left: auto;
+    gap: 6px;
+  }
+
+  .wallet-pill {
+    max-width: 155px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 8px 9px;
+  }
+
+  .hero,
+  .detail-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+  }
+
+  .hero {
+    padding: 56px 22px;
+  }
+
+  .hero-card {
+    padding: 28px;
+  }
+
+  .detail-grid h1 {
+    font-size: clamp(32px, 7vw, 48px);
+    letter-spacing: -1px;
+    overflow-wrap: anywhere;
+  }
+
+  .section,
+  .page-section {
+    padding: 42px 20px;
+  }
+
+  .auction-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Phones */
+@media (max-width: 620px) {
+  body {
+    overflow-wrap: anywhere;
+  }
+
+  .nav-inner {
+    padding: 10px 14px;
+    gap: 8px;
+  }
+
+  .brand {
+    font-size: 20px;
+  }
+
+  .nav-user {
+    gap: 5px;
+  }
+
+  .nav-user .btn.small {
+    padding: 8px 9px;
+    font-size: 11px;
+  }
+
+  .wallet-pill {
+    max-width: 124px;
+    font-size: 10px;
+  }
+
+  .mobile-menu-toggle {
+    width: 40px;
+    height: 40px;
+  }
+
+  .hero {
+    padding: 42px 18px;
+  }
+
+  .hero h1 {
+    font-size: clamp(40px, 12vw, 54px);
+    letter-spacing: -2px;
+    line-height: 1.02;
+  }
+
+  .hero p {
+    font-size: 16px;
+  }
+
+  .hero-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .hero-actions .btn {
+    width: 100%;
+  }
+
+  .hero-card {
+    padding: 22px;
+    border-radius: 20px;
+  }
+
+  .pulse-ring {
+    width: 112px;
+    height: 112px;
+    box-shadow:
+      0 0 0 14px rgba(124, 92, 255, 0.05),
+      0 0 0 28px rgba(124, 92, 255, 0.025);
+  }
+
+  .section,
+  .page-section {
+    padding: 32px 16px;
+  }
+
+  .section-heading,
+  .dashboard-header,
+  .detail-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .section-heading h1,
+  .section-heading h2,
+  .dashboard-header h1,
+  .page-section > h1 {
+    font-size: clamp(27px, 8vw, 36px);
+    letter-spacing: -1px;
+  }
+
+  .auction-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 13px;
+  }
+
+  .auction-card,
+  .panel,
+  .form-card,
+  .profile-card {
+    padding: 17px;
+    border-radius: 15px;
+  }
+
+  .auction-card {
+    min-height: 0;
+  }
+
+  .toolbar {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .toolbar input,
+  .toolbar select {
+    max-width: none;
+    width: 100%;
+  }
+
+  .form-grid,
+  .stats-grid,
+  .price-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .span-2 {
+    grid-column: auto;
+  }
+
+  .auth-page {
+    padding: 28px 14px;
+  }
+
+  .auth-card {
+    padding: 23px 18px;
+    border-radius: 16px;
+  }
+
+  .auth-card h1 {
+    font-size: 32px;
+  }
+
+  .detail-grid {
+    gap: 14px;
+  }
+
+  .detail-grid h1 {
+    font-size: clamp(30px, 9vw, 42px);
+  }
+
+  .balance-card {
+    padding: 20px;
+    margin-bottom: 28px;
+  }
+
+  .balance-card > strong {
+    font-size: clamp(27px, 8vw, 36px);
+    overflow-wrap: anywhere;
+  }
+
+  .balance-details {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .seller-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 9px;
+    padding: 14px;
+  }
+
+  .profile-meta {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .table-wrap {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  table {
+    min-width: 580px;
+  }
+
+  th,
+  td {
+    padding: 11px 10px;
+  }
+
+  .footer {
+    padding: 20px 16px;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .modal-backdrop {
+    padding: 12px;
+  }
+
+  .modal {
+    padding: 20px;
+    max-width: 100%;
+  }
+
+  .modal-actions {
+    flex-wrap: wrap;
+  }
+
+  .modal-actions .btn {
+    flex: 1 1 120px;
+  }
+
+  .deposit-card {
+    padding: 18px;
+  }
+
+  .deposit-form {
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+
+/* Respect reduced-motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
