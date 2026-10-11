@@ -1,50 +1,107 @@
+
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { formatCurrency } from "../../utils/formatCurrency";
-import { useTheme } from "../../context/ThemeContext";
+import { useState } from "react";
 
 export default function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
-  const { theme, toggleTheme } = useTheme();
+  const [menuOpen, setMenuOpen] = useState(false);
+
   const doLogout = () => {
+    setMenuOpen(false);
     logout();
     navigate("/login");
   };
 
+  const closeMenu = () => setMenuOpen(false);
+
   return (
     <header className="navbar">
       <div className="nav-inner">
-        <Link className="brand" to="/">Auction<span>Hub</span></Link>
-        <nav className="nav-links">
-          <NavLink to="/auctions">Auctions</NavLink>
-          {isAuthenticated && <NavLink to="/dashboard">Dashboard</NavLink>}
-          {isAuthenticated && <NavLink to="/my-bids">My Bids</NavLink>}
-          {isAuthenticated && <NavLink to="/my-auctions">My Auctions</NavLink>}
-          {isAuthenticated && <NavLink to="/create-auction">Sell</NavLink>}
+        <Link className="brand" to="/" onClick={closeMenu}>
+          Auction<span>Hub</span>
+        </Link>
+
+        <nav
+          className={`nav-links${menuOpen ? " nav-links-open" : ""}`}
+          aria-label="Main navigation"
+        >
+          <NavLink to="/auctions" onClick={closeMenu}>
+            Auctions
+          </NavLink>
+
+          {isAuthenticated && (
+            <NavLink to="/dashboard" onClick={closeMenu}>
+              Dashboard
+            </NavLink>
+          )}
+
+          {isAuthenticated && (
+            <NavLink to="/my-bids" onClick={closeMenu}>
+              My Bids
+            </NavLink>
+          )}
+
+          {isAuthenticated && (
+            <NavLink to="/my-auctions" onClick={closeMenu}>
+              My Auctions
+            </NavLink>
+          )}
+
+          {isAuthenticated && (
+            <NavLink to="/create-auction" onClick={closeMenu}>
+              Sell
+            </NavLink>
+          )}
         </nav>
-        <button
-  type="button"
-  className="btn small secondary theme-toggle"
-  onClick={toggleTheme}
-  aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
-  title="Toggle color theme"
->
-  {theme === "dark" ? "☀️ Light" : "🌙 Dark"}
-</button>
+
         <div className="nav-user">
           {isAuthenticated ? (
             <>
-              <Link to="/profile" className="wallet-pill">{formatCurrency(user?.availableBalance ?? 0)} available</Link>
-              <button className="btn small secondary" onClick={doLogout}>Logout</button>
+              <span className="wallet-pill">
+                ₹{formatCurrency(user?.balance ?? 0)} available
+              </span>
+
+              <button
+                type="button"
+                className="btn small secondary"
+                onClick={doLogout}
+              >
+                Logout
+              </button>
             </>
           ) : (
             <>
-              <Link className="btn small secondary" to="/login">Login</Link>
-              <Link className="btn small primary" to="/register">Register</Link>
+              <Link
+                className="btn small secondary"
+                to="/login"
+                onClick={closeMenu}
+              >
+                Login
+              </Link>
+
+              <Link
+                className="btn small"
+                to="/register"
+                onClick={closeMenu}
+              >
+                Get Started
+              </Link>
             </>
           )}
         </div>
+
+        <button
+          type="button"
+          className="mobile-menu-toggle"
+          aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}
+          aria-expanded={menuOpen}
+          onClick={() => setMenuOpen((open) => !open)}
+        >
+          <span>{menuOpen ? "✕" : "☰"}</span>
+        </button>
       </div>
     </header>
   );
