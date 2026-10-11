@@ -1,14 +1,29 @@
+
 import { useTheme } from "../../context/ThemeContext";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { formatCurrency } from "../../utils/formatCurrency";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function Navbar() {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, refreshUser } = useAuth();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    // Refresh immediately, then periodically.
+    refreshUser();
+
+    const intervalId = setInterval(() => {
+      refreshUser();
+    }, 10000);
+
+    return () => clearInterval(intervalId);
+  }, [isAuthenticated, refreshUser]);
+
   const doLogout = () => {
     setMenuOpen(false);
     logout();
@@ -28,36 +43,19 @@ export default function Navbar() {
           className={`nav-links${menuOpen ? " nav-links-open" : ""}`}
           aria-label="Main navigation"
         >
-          <NavLink to="/auctions" onClick={closeMenu}>
-            Auctions
-          </NavLink>
+          <NavLink to="/auctions" onClick={closeMenu}>Auctions</NavLink>
 
           {isAuthenticated && (
-            <NavLink to="/dashboard" onClick={closeMenu}>
-              Dashboard
-            </NavLink>
-          )}
-
-          {isAuthenticated && (
-            <NavLink to="/my-bids" onClick={closeMenu}>
-              My Bids
-            </NavLink>
-          )}
-
-          {isAuthenticated && (
-            <NavLink to="/my-auctions" onClick={closeMenu}>
-              My Auctions
-            </NavLink>
-          )}
-
-          {isAuthenticated && (
-            <NavLink to="/create-auction" onClick={closeMenu}>
-              Sell
-            </NavLink>
+            <>
+              <NavLink to="/dashboard" onClick={closeMenu}>Dashboard</NavLink>
+              <NavLink to="/my-bids" onClick={closeMenu}>My Bids</NavLink>
+              <NavLink to="/my-auctions" onClick={closeMenu}>My Auctions</NavLink>
+              <NavLink to="/create-auction" onClick={closeMenu}>Sell</NavLink>
+            </>
           )}
         </nav>
 
-          <button
+        <button
           type="button"
           className="btn small secondary theme-toggle"
           onClick={toggleTheme}
@@ -69,7 +67,7 @@ export default function Navbar() {
             {theme === "dark" ? "Light" : "Dark"}
           </span>
         </button>
-        
+
         <div className="nav-user">
           {isAuthenticated ? (
             <>
@@ -87,19 +85,10 @@ export default function Navbar() {
             </>
           ) : (
             <>
-              <Link
-                className="btn small secondary"
-                to="/login"
-                onClick={closeMenu}
-              >
+              <Link className="btn small secondary" to="/login" onClick={closeMenu}>
                 Login
               </Link>
-
-              <Link
-                className="btn small"
-                to="/register"
-                onClick={closeMenu}
-              >
+              <Link className="btn small" to="/register" onClick={closeMenu}>
                 Get Started
               </Link>
             </>
