@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useCallback, useEffect, useMemo, useState } from "react";
 import { login as loginRequest, register as registerRequest } from "../services/authService";
 import { getMe } from "../services/userService";
 import { clearAuth, getStoredUser, getToken, saveAuth } from "../utils/auth";
@@ -19,16 +19,16 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(getStoredUser());
   const [loading, setLoading] = useState(Boolean(getToken()));
 
-  const refreshUser = async () => {
-    try {
-      const me = await getMe();
-      setUser(me);
-      saveAuth(getToken(), me);
-      return me;
-    } catch {
-      return null;
-    }
-  };
+  const refreshUser = useCallback(async () => {
+  try {
+    const me = await getMe();
+    setUser(me);
+    saveAuth(getToken(), me);
+    return me;
+  } catch {
+    return null;
+  }
+}, []);
 
   useEffect(() => {
     const onExpired = () => {
