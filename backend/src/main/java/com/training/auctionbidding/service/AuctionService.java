@@ -1,6 +1,5 @@
 package com.training.auctionbidding.service;
 
-import org.springframework.scheduling.annotation.Scheduled;
 import com.training.auctionbidding.dto.AuctionRequest;
 import com.training.auctionbidding.dto.AuctionResponse;
 import com.training.auctionbidding.dto.UserResponse;
@@ -173,32 +172,6 @@ public class AuctionService {
 
         auction.setStatus(AuctionStatus.ENDED);
         return auctionRepository.save(auction);
-    }
-
-    // Automatically update auction statuses every 10 seconds
-    @Scheduled(fixedRate = 10000)
-    @Transactional
-    public void updateAuctionStatuses() {
-        LocalDateTime now = LocalDateTime.now(AUCTION_ZONE);
-
-        List<Auction> auctions = auctionRepository.findAll();
-
-        for (Auction auction : auctions) {
-            if (auction.getStatus() == AuctionStatus.CANCELLED
-                    || auction.getStatus() == AuctionStatus.ENDED) {
-                continue;
-            }
-
-            if (!now.isBefore(auction.getEndTime())) {
-                endAuction(auction.getId());
-            } else if (!now.isBefore(auction.getStartTime())) {
-                auction.setStatus(AuctionStatus.LIVE);
-                auctionRepository.save(auction);
-            } else {
-                auction.setStatus(AuctionStatus.UPCOMING);
-                auctionRepository.save(auction);
-            }
-        }
     }
 
     // Convert Auction entity to AuctionResponse DTO

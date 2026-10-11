@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 @Service
@@ -41,7 +42,7 @@ public class BidService {
                 .orElseThrow(() -> new AuctionNotFoundException(auctionId));
 
         User bidder = userService.getByEmail(bidderEmail);
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Kolkata"));
 
         if (auction.getStatus() != AuctionStatus.LIVE) {
             throw new InvalidBidException("Auction is not currently live");
@@ -51,7 +52,7 @@ public class BidService {
             throw new InvalidBidException("Auction has not started yet");
         }
 
-        if (now.isAfter(auction.getEndTime())) {
+        if (!now.isBefore(auction.getEndTime())) {
             auction.setStatus(AuctionStatus.ENDED);
             throw new InvalidBidException("Auction has already ended");
         }
