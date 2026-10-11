@@ -18,6 +18,73 @@
   --yellow: #f7c75a;
 }
 
+/* Light theme overrides */
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --bg: #f7f7f5;
+  --surface: #ffffff;
+  --surface-2: #f0f2f5;
+  --border: #e1e5eb;
+  --text: #1f2933;
+  --muted: #667085;
+  --primary: #2563eb;
+  --primary-2: #1d4ed8;
+  --green: #15803d;
+  --red: #b42318;
+  --yellow: #b45309;
+}
+
+/* Apply theme variables to the whole page */
+:root {
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Navbar */
+:root[data-theme="light"] .navbar {
+  background: rgba(255, 255, 255, 0.92);
+  border-bottom-color: var(--border);
+}
+
+:root[data-theme="light"] .nav-links a.active,
+:root[data-theme="light"] .nav-links a:hover {
+  color: var(--text);
+}
+
+:root[data-theme="light"] .btn.secondary {
+  background: #ffffff;
+  color: #1f2933;
+  border-color: var(--border);
+}
+
+/* Common surfaces */
+:root[data-theme="light"] .hero-card,
+:root[data-theme="light"] .card,
+:root[data-theme="light"] .auction-card {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+:root[data-theme="light"] input,
+:root[data-theme="light"] textarea,
+:root[data-theme="light"] select {
+  background: #ffffff;
+  color: var(--text);
+  border-color: var(--border);
+}
+
+:root[data-theme="light"] input::placeholder,
+:root[data-theme="light"] textarea::placeholder {
+  color: var(--muted);
+}
+
+
 * { box-sizing: border-box; }
 body { margin: 0; min-width: 320px; background: radial-gradient(circle at 80% 0%, #15102d 0, transparent 35%), var(--bg); color: var(--text); }
 button, input, select, textarea { font: inherit; }
