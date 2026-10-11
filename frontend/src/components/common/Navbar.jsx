@@ -1,4 +1,4 @@
-
+import { useTheme } from "../../context/ThemeContext";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { formatCurrency } from "../../utils/formatCurrency";
@@ -8,7 +8,7 @@ export default function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
-
+  const { theme, toggleTheme } = useTheme();
   const doLogout = () => {
     setMenuOpen(false);
     logout();
@@ -57,11 +57,24 @@ export default function Navbar() {
           )}
         </nav>
 
+          <button
+          type="button"
+          className="btn small secondary theme-toggle"
+          onClick={toggleTheme}
+          aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+          title="Toggle theme"
+        >
+          {theme === "dark" ? "☀️" : "🌙"}
+          <span className="theme-label">
+            {theme === "dark" ? "Light" : "Dark"}
+          </span>
+        </button>
+        
         <div className="nav-user">
           {isAuthenticated ? (
             <>
               <span className="wallet-pill">
-                ₹{formatCurrency(user?.balance ?? 0)} available
+                {formatCurrency(user?.balance ?? 0)} available
               </span>
 
               <button
